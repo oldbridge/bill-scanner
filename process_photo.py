@@ -81,3 +81,6 @@ while(1):
     if k == 27:
         cv2.destroyAllWindows()
         sys.exit()
+    elif k == 32: # press SPACE to accept
+        break
+cv2.imwrite(name + '_bw.png', img_th)
