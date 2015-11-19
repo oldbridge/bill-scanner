@@ -7,6 +7,13 @@ def nothing(x):
     pass
 
 
+def threshold(x):
+    "Apply a certain thrshold"
+    global img_bw, img_th
+    #img_th = (img_bw > x) * (200)
+    (thresh, img_th) = cv2.threshold(img_bw, x, 255, cv2.THRESH_BINARY)
+
+
 def rotate(x):
     "Rotate the picture 1 tick per minute"
     global img_rot, img_orig
@@ -16,7 +23,8 @@ def rotate(x):
 
 
 # Load the picture of the ticket
-img_orig = cv2.imread('ticket.JPG')
+name = 'ticket'
+img_orig = cv2.imread(name + '.JPG')
 img = np.copy(img_orig)
 img_rot = np.copy(img_orig)
 rows,cols, colors = img_orig.shape
@@ -57,11 +65,18 @@ if top >= bottom:
     bottom = aux
 img_plot = np.zeros((bottom-top, r-l),np.uint8)
 img_plot = img_rot[top:bottom,l:r,:]
+img_bw = np.zeros((rows, cols), np.int8)
+
 cv2.destroyWindow('trackbars')
+cv2.namedWindow('trackbars', cv2.WINDOW_NORMAL)
+cv2.createTrackbar('Threshold', 'trackbars',0,255, threshold)
+
+img_bw = cv2.cvtColor(img_plot, cv2.COLOR_BGR2GRAY)
+img_th = np.copy(img_bw)
 
 "Display the cropped picture only"
 while(1):
-    cv2.imshow('image', img_plot)
+    cv2.imshow('image', img_th)
     k = cv2.waitKey(1) & 0xFF
     if k == 27:
         cv2.destroyAllWindows()
