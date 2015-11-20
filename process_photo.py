@@ -18,6 +18,14 @@ class ProcessPhoto:
         M = cv2.getRotationMatrix2D((self.cols/2,self.rows/2),x,1)
         self.img_rot = cv2.warpAffine(self.img_orig,M,(self.cols,self.rows))
 
+    def select_crop(self, event,x,y,flags,param):
+        global ix, iy, orig_img, crop_rect, new_img
+        if event == cv2.EVENT_LBUTTONDOWN:
+            ix = x
+            iy = y
+        elif event == cv2.EVENT_LBUTTONUP:
+            self.crop_rect = {'ix':ix, 'iy':iy, 'ex':x, 'ey':y}
+
 
     def __init__(self, route):
         self.route = route
@@ -28,40 +36,35 @@ class ProcessPhoto:
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
         cv2.namedWindow('trackbars', cv2.WINDOW_NORMAL)
         self.selection = np.zeros((self.rows, self.cols, self.colors),np.int8)
-        # create trackbars for cropping & rotation
+        # create trackbar for rotation
         cv2.createTrackbar('Rotate','trackbars',0,360*60,self.rotate)
-        cv2.createTrackbar('Top', 'trackbars',0,self.rows, self.nothing)
-        cv2.createTrackbar('Bottom', 'trackbars',0,self.rows, self.nothing)
-        cv2.createTrackbar('Right', 'trackbars',0,self.rows, self.nothing)
-        cv2.createTrackbar('Left', 'trackbars',0,self.rows, self.nothing)
-    
+        cv2.setMouseCallback('image', self.select_crop)
+        self.crop_rect = {'ix':0, 'iy':0, 'ex':0, 'ey':0}
         "Crop and rotate the photo"
         while(1):
-            self.rows, self.cols, self.colors = self.img.shape
             cv2.imshow('image',self.img)
             top = cv2.getTrackbarPos('Top','trackbars')
             bottom = cv2.getTrackbarPos('Bottom','trackbars')
-            r = cv2.getTrackbarPos('Right','trackbars')
-            l = cv2.getTrackbarPos('Left','trackbars')
-            img = np.copy(self.img_rot)
+            self.img = np.copy(self.img_rot)
             #selection = np.zeros((rows, cols, colors),np.int8)
-            cv2.rectangle(self.img, (l,top),(r, bottom),(255,0,0),10)
+            cv2.rectangle(self.img, (self.crop_rect['ix'], self.crop_rect['iy']),
+                          (self.crop_rect['ex'], self.crop_rect['ey']), (255,0,0),10)
             k = cv2.waitKey(1) & 0xFF
             if k == 27: # press ESC to abort process
                 cv2.destroyAllWindows()
                 sys.exit()
             elif k == 32: # press SPACE to accept
                 break
-        if l >= r:
-            aux = l
-            l = r
-            r = aux
-        if top >= bottom:
-            aux = top
-            top = bottom
-            bottom = aux
-        self.img_plot = np.zeros((bottom-top, r-l),np.uint8)
-        self.img_plot = self.img_rot[top:bottom,l:r,:]
+        if self.crop_rect['ix'] >= self.crop_rect['ex']:
+            aux = self.crop_rect['ex']
+            self.crop_rect['ex'] = self.crop_rect['ix']
+            self.crop_rect['ix'] = aux
+        if self.crop_rect['iy'] >= self.crop_rect['ey']:
+            aux = self.crop_rect['iy']
+            self.crop_rect['iy'] = self.crop_rect['ey']
+            self.crop_rect['ey'] = aux
+        self.img_plot = np.zeros((self.crop_rect['ey']-self.crop_rect['iy'], self.crop_rect['ex']-self.crop_rect['ix']),np.uint8)
+        self.img_plot = self.img_rot[self.crop_rect['iy']:self.crop_rect['ey'],self.crop_rect['ix']:self.crop_rect['ex'],:]
         self.img_bw = np.zeros((self.rows, self.cols), np.int8)
     
         cv2.destroyWindow('trackbars')
