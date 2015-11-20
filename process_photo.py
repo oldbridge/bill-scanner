@@ -15,7 +15,7 @@ class ProcessPhoto:
     def rotate(self, x):
         "Rotate the picture 1 tick per minute"
         x = x / 60
-        M = cv2.getRotationMatrix2D((cols/2,rows/2),x,1)
+        M = cv2.getRotationMatrix2D((self.cols/2,self.rows/2),x,1)
         self.img_rot = cv2.warpAffine(self.img_orig,M,(self.cols,self.rows))
 
 
