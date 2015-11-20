@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import tempfile
 import sys
 
 class ProcessPhoto:
@@ -28,6 +29,7 @@ class ProcessPhoto:
 
 
     def __init__(self, route):
+        self.ended = False
         self.route = route
         self.img_orig = cv2.imread(self.route)
         self.img = np.copy(self.img_orig)
@@ -83,6 +85,8 @@ class ProcessPhoto:
                 sys.exit()
             elif k == 32: # press SPACE to accept
                 break
-        cv2.imwrite(self.route + '_bw.png', self.img_th)
-
-
+        self.ended = True
+        cv2.destroyAllWindows()
+        tmpfile = tempfile.NamedTemporaryFile(prefix="billscan_")
+        self.outfile = tmpfile.name + ".png"
+        cv2.imwrite(self.outfile, self.img_th)
